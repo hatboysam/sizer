@@ -1,33 +1,49 @@
-function fullScreen() {
-	resize(0.0,1.0);
-}
+var maxWidth = window.screen.availWidth;
+var maxHeight = window.screen.availHeight;
+var leftBlock = window.screen.availLeft;
+var rightBlock = window.screen.availRight;
+var topBlock = window.screen.availTop;
 
 function leftHalf() {
-	resize(0.0,0.5);
+    resizeScreen(1.0, 0.5, true);
 }
 
 function rightHalf() {
-	resize(0.5,0.5);
+    resizeScreen(1.0, 0.5, false);
 }
 
-function resize(leftFactor,widthFactor) {
-	chrome.windows.getCurrent(function(wind) {
-		var maxWidth = window.screen.availWidth;
-	  	var maxHeight = window.screen.availHeight;
-	  	var newWidth = maxWidth * widthFactor;
-	  	var updateInfo = {
-	    	left: maxWidth * leftFactor,
-	    	top: 0,
-	    	width: newWidth,
-	    	height: maxHeight
-	  	};
-	    chrome.windows.update(wind.id, updateInfo);
-	});
-	window.close();
+function fullScreen() {
+    resizeScreen(1.0, 1.0, true);
 }
 
-$(document).ready(function() {
-	$('#full').click(fullScreen);
-	$('#left').click(leftHalf);
-	$('#right').click(rightHalf);
+function resizeScreen(vFrac, hFrac, alignLeft) {
+    var newWidth = hFrac * maxWidth;
+    var newHeight = vFrac * maxHeight;
+    
+    var leftPos = alignLeft ? 0 : (maxWidth - newWidth);
+    
+    var updateInfo = {
+        left: Math.round(leftBlock + leftPos),
+        top: Math.round(0),
+        width: Math.round(newWidth),
+        height: Math.round(newHeight)
+    };
+ 
+    chrome.windows.getCurrent(function(window) {
+        console.log(window);   
+        chrome.windows.update(window.id, updateInfo);
+    });
+    
+    //window.close();
+}
+
+chrome.commands.onCommand.addListener(function(command) {
+  console.log('Command:', command);
+  if (command === "window-left") {
+      leftHalf();
+  } else if (command === "window-right") {
+      rightHalf();
+  } else if (command === "window-full") {
+      fullScreen();
+  }
 });
